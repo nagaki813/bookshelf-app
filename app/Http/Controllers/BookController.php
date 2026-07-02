@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Genre;
-use Illuminate\Http\Request;
 use App\Http\Requests\BookRequest;
 
 class BookController extends Controller
@@ -32,7 +31,7 @@ class BookController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(BookRequest $request)
     {
         $validated = $request->validated();
 
@@ -87,7 +86,7 @@ class BookController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Book $book)
+    public function update(BookRequest $request, Book $book)
     {
         $this->authorize('update', $book);
 
