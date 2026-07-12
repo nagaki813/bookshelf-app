@@ -1,0 +1,785 @@
+[1mdiff --git a/app/Http/Controllers/BookController.php b/app/Http/Controllers/BookController.php[m
+[1mindex a1451a6..9fb701b 100644[m
+[1m--- a/app/Http/Controllers/BookController.php[m
+[1m+++ b/app/Http/Controllers/BookController.php[m
+[36m@@ -2,9 +2,9 @@[m
+ [m
+ namespace App\Http\Controllers;[m
+ [m
+[32m+[m[32muse App\Http\Requests\BookRequest;[m
+ use App\Models\Book;[m
+ use App\Models\Genre;[m
+[31m-use App\Http\Requests\BookRequest;[m
+ [m
+ class BookController extends Controller[m
+ {[m
+[36m@@ -13,7 +13,7 @@[m [mpublic function index()[m
+         $books = Book::with(['genres'])[m
+             ->withAvg('reviews', 'rating')[m
+             ->latest()[m
+[31m-            ->paginate(12);[m
+[32m+[m[32m            ->paginate(10);[m
+ [m
+         return view('books.index', compact('books'));[m
+     }[m
+[1mdiff --git a/app/Http/Controllers/FavoriteController.php b/app/Http/Controllers/FavoriteController.php[m
+[1mindex 6bc4944..ceee39a 100644[m
+[1m--- a/app/Http/Controllers/FavoriteController.php[m
+[1m+++ b/app/Http/Controllers/FavoriteController.php[m
+[36m@@ -2,7 +2,6 @@[m
+ [m
+ namespace App\Http\Controllers;[m
+ [m
+[31m-use Illuminate\Http\Request;[m
+ use App\Models\Book;[m
+ [m
+ class FavoriteController extends Controller[m
+[1mdiff --git a/app/Http/Controllers/GenreController.php b/app/Http/Controllers/GenreController.php[m
+[1mindex 2c0d43c..f24c392 100644[m
+[1m--- a/app/Http/Controllers/GenreController.php[m
+[1m+++ b/app/Http/Controllers/GenreController.php[m
+[36m@@ -2,8 +2,8 @@[m
+ [m
+ namespace App\Http\Controllers;[m
+ [m
+[31m-use App\Models\Genre;[m
+ use App\Http\Requests\GenreRequest;[m
+[32m+[m[32muse App\Models\Genre;[m
+ [m
+ class GenreController extends Controller[m
+ {[m
+[1mdiff --git a/app/Http/Controllers/ReviewController.php b/app/Http/Controllers/ReviewController.php[m
+[1mindex 956ad78..8586033 100644[m
+[1m--- a/app/Http/Controllers/ReviewController.php[m
+[1m+++ b/app/Http/Controllers/ReviewController.php[m
+[36m@@ -2,7 +2,6 @@[m
+ [m
+ namespace App\Http\Controllers;[m
+ [m
+[31m-use Illuminate\Http\Request;[m
+ use App\Http\Requests\ReviewRequest;[m
+ use App\Models\Book;[m
+ use App\Models\Review;[m
+[36m@@ -63,5 +62,4 @@[m [mpublic function like(Review $review)[m
+ [m
+         return back()->with('success', 'レビューのいいねを更新しました。');[m
+     }[m
+[31m-[m
+ }[m
+[1mdiff --git a/app/Http/Kernel.php b/app/Http/Kernel.php[m
+[1mindex 494c050..8be3302 100644[m
+[1m--- a/app/Http/Kernel.php[m
+[1m+++ b/app/Http/Kernel.php[m
+[36m@@ -2,7 +2,30 @@[m
+ [m
+ namespace App\Http;[m
+ [m
+[32m+[m[32muse App\Http\Middleware\Authenticate;[m
+[32m+[m[32muse App\Http\Middleware\EncryptCookies;[m
+[32m+[m[32muse App\Http\Middleware\PreventRequestsDuringMaintenance;[m
+[32m+[m[32muse App\Http\Middleware\RedirectIfAuthenticated;[m
+[32m+[m[32muse App\Http\Middleware\TrimStrings;[m
+[32m+[m[32muse App\Http\Middleware\TrustProxies;[m
+[32m+[m[32muse App\Http\Middleware\ValidateSignature;[m
+[32m+[m[32muse App\Http\Middleware\VerifyCsrfToken;[m
+[32m+[m[32muse Illuminate\Auth\Middleware\AuthenticateWithBasicAuth;[m
+[32m+[m[32muse Illuminate\Auth\Middleware\Authorize;[m
+[32m+[m[32muse Illuminate\Auth\Middleware\EnsureEmailIsVerified;[m
+[32m+[m[32muse Illuminate\Auth\Middleware\RequirePassword;[m
+[32m+[m[32muse Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;[m
+ use Illuminate\Foundation\Http\Kernel as HttpKernel;[m
+[32m+[m[32muse Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;[m
+[32m+[m[32muse Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests;[m
+[32m+[m[32muse Illuminate\Foundation\Http\Middleware\ValidatePostSize;[m
+[32m+[m[32muse Illuminate\Http\Middleware\HandleCors;[m
+[32m+[m[32muse Illuminate\Http\Middleware\SetCacheHeaders;[m
+[32m+[m[32muse Illuminate\Routing\Middleware\SubstituteBindings;[m
+[32m+[m[32muse Illuminate\Routing\Middleware\ThrottleRequests;[m
+[32m+[m[32muse Illuminate\Session\Middleware\AuthenticateSession;[m
+[32m+[m[32muse Illuminate\Session\Middleware\StartSession;[m
+[32m+[m[32muse Illuminate\View\Middleware\ShareErrorsFromSession;[m
+ [m
+ class Kernel extends HttpKernel[m
+ {[m
+[36m@@ -15,12 +38,12 @@[m [mclass Kernel extends HttpKernel[m
+      */[m
+     protected $middleware = [[m
+         // \App\Http\Middleware\TrustHosts::class,[m
+[31m-        \App\Http\Middleware\TrustProxies::class,[m
+[31m-        \Illuminate\Http\Middleware\HandleCors::class,[m
+[31m-        \App\Http\Middleware\PreventRequestsDuringMaintenance::class,[m
+[31m-        \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,[m
+[31m-        \App\Http\Middleware\TrimStrings::class,[m
+[31m-        \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,[m
+[32m+[m[32m        TrustProxies::class,[m
+[32m+[m[32m        HandleCors::class,[m
+[32m+[m[32m        PreventRequestsDuringMaintenance::class,[m
+[32m+[m[32m        ValidatePostSize::class,[m
+[32m+[m[32m        TrimStrings::class,[m
+[32m+[m[32m        ConvertEmptyStringsToNull::class,[m
+     ];[m
+ [m
+     /**[m
+[36m@@ -30,18 +53,18 @@[m [mclass Kernel extends HttpKernel[m
+      */[m
+     protected $middlewareGroups = [[m
+         'web' => [[m
+[31m-            \App\Http\Middleware\EncryptCookies::class,[m
+[31m-            \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,[m
+[31m-            \Illuminate\Session\Middleware\StartSession::class,[m
+[31m-            \Illuminate\View\Middleware\ShareErrorsFromSession::class,[m
+[31m-            \App\Http\Middleware\VerifyCsrfToken::class,[m
+[31m-            \Illuminate\Routing\Middleware\SubstituteBindings::class,[m
+[32m+[m[32m            EncryptCookies::class,[m
+[32m+[m[32m            AddQueuedCookiesToResponse::class,[m
+[32m+[m[32m            StartSession::class,[m
+[32m+[m[32m            ShareErrorsFromSession::class,[m
+[32m+[m[32m            VerifyCsrfToken::class,[m
+[32m+[m[32m            SubstituteBindings::class,[m
+         ],[m
+ [m
+         'api' => [[m
+             // \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,[m
+[31m-            \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',[m
+[31m-            \Illuminate\Routing\Middleware\SubstituteBindings::class,[m
+[32m+[m[32m            ThrottleRequests::class.':api',[m
+[32m+[m[32m            SubstituteBindings::class,[m
+         ],[m
+     ];[m
+ [m
+[36m@@ -53,16 +76,16 @@[m [mclass Kernel extends HttpKernel[m
+      * @var array<string, class-string|string>[m
+      */[m
+     protected $middlewareAliases = [[m
+[31m-        'auth' => \App\Http\Middleware\Authenticate::class,[m
+[31m-        'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,[m
+[31m-        'auth.session' => \Illuminate\Session\Middleware\AuthenticateSession::class,[m
+[31m-        'cache.headers' => \Illuminate\Http\Middleware\SetCacheHeaders::class,[m
+[31m-        'can' => \Illuminate\Auth\Middleware\Authorize::class,[m
+[31m-        'guest' => \App\Http\Middleware\RedirectIfAuthenticated::class,[m
+[31m-        'password.confirm' => \Illuminate\Auth\Middleware\RequirePassword::class,[m
+[31m-        'precognitive' => \Illuminate\Foundation\Http\Middleware\HandlePrecognitiveRequests::class,[m
+[31m-        'signed' => \App\Http\Middleware\ValidateSignature::class,[m
+[31m-        'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,[m
+[31m-        'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,[m
+[32m+[m[32m        'auth' => Authenticate::class,[m
+[32m+[m[32m        'auth.basic' => AuthenticateWithBasicAuth::class,[m
+[32m+[m[32m        'auth.session' => AuthenticateSession::class,[m
+[32m+[m[32m        'cache.headers' => SetCacheHeaders::class,[m
+[32m+[m[32m        'can' => Authorize::class,[m
+[32m+[m[32m        'guest' => RedirectIfAuthenticated::class,[m
+[32m+[m[32m        'password.confirm' => RequirePassword::class,[m
+[32m+[m[32m        'precognitive' => HandlePrecognitiveRequests::class,[m
+[32m+[m[32m        'signed' => ValidateSignature::class,[m
+[32m+[m[32m        'throttle' => ThrottleRequests::class,[m
+[32m+[m[32m        'verified' => EnsureEmailIsVerified::class,[m
+     ];[m
+ }[m
+[1mdiff --git a/app/Http/Middleware/RedirectIfAuthenticated.php b/app/Http/Middleware/RedirectIfAuthenticated.php[m
+[1mindex afc78c4..b92e43f 100644[m
+[1m--- a/app/Http/Middleware/RedirectIfAuthenticated.php[m
+[1m+++ b/app/Http/Middleware/RedirectIfAuthenticated.php[m
+[36m@@ -13,7 +13,7 @@[m [mclass RedirectIfAuthenticated[m
+     /**[m
+      * Handle an incoming request.[m
+      *[m
+[31m-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next[m
+[32m+[m[32m     * @param  Closure(Request): (Response)  $next[m
+      */[m
+     public function handle(Request $request, Closure $next, string ...$guards): Response[m
+     {[m
+[1mdiff --git a/app/Http/Requests/ApiBookRequest.php b/app/Http/Requests/ApiBookRequest.php[m
+[1mindex 6b3a1a6..2fe6a12 100644[m
+[1m--- a/app/Http/Requests/ApiBookRequest.php[m
+[1m+++ b/app/Http/Requests/ApiBookRequest.php[m
+[36m@@ -3,6 +3,7 @@[m
+ namespace App\Http\Requests;[m
+ [m
+ use App\Models\Book;[m
+[32m+[m[32muse Illuminate\Contracts\Validation\ValidationRule;[m
+ use Illuminate\Foundation\Http\FormRequest;[m
+ use Illuminate\Validation\Rule;[m
+ [m
+[36m@@ -19,7 +20,7 @@[m [mpublic function authorize(): bool[m
+     /**[m
+      * Get the validation rules that apply to the request.[m
+      *[m
+[31m-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>[m
+[32m+[m[32m     * @return array<string, ValidationRule|array<mixed>|string>[m
+      */[m
+     public function rules(): array[m
+     {[m
+[1mdiff --git a/app/Http/Requests/BookRequest.php b/app/Http/Requests/BookRequest.php[m
+[1mindex 9071f15..96d5ddf 100644[m
+[1m--- a/app/Http/Requests/BookRequest.php[m
+[1m+++ b/app/Http/Requests/BookRequest.php[m
+[36m@@ -2,9 +2,9 @@[m
+ [m
+ namespace App\Http\Requests;[m
+ [m
+[32m+[m[32muse App\Models\Book;[m
+ use Illuminate\Foundation\Http\FormRequest;[m
+ use Illuminate\Validation\Rule;[m
+[31m-use App\Models\Book;[m
+ [m
+ class BookRequest extends FormRequest[m
+ {[m
+[36m@@ -24,14 +24,15 @@[m [mpublic function rules(): array[m
+             'author' => ['required', 'string', 'max:255'],[m
+             'isbn' => [[m
+                 'required', 'string', 'digits:13', Rule::unique('books', 'isbn')->ignore($bookId, 'id'),[m
+[31m-                ],[m
+[32m+[m[32m            ],[m
+             'published_date' => ['required', 'date'],[m
+[31m-            'description' => ['nullable', 'url', 'max:2048'],[m
+[32m+[m[32m            'description' => ['nullable', 'max:2048'],[m
+             'image_url' => ['nullable', 'url', 'max:2048'],[m
+             'genres' => ['required', 'array', 'min:1'],[m
+             'genres.*' => ['exists:genres,id'],[m
+         ];[m
+     }[m
+[32m+[m
+     public function messages(): array[m
+     {[m
+         return [[m
+[1mdiff --git a/app/Http/Requests/GenreRequest.php b/app/Http/Requests/GenreRequest.php[m
+[1mindex 4cb3e22..1733c76 100644[m
+[1m--- a/app/Http/Requests/GenreRequest.php[m
+[1m+++ b/app/Http/Requests/GenreRequest.php[m
+[36m@@ -38,4 +38,4 @@[m [mpublic function messages(): array[m
+             'name.unique' => 'このジャンル名は既に登録されています。',[m
+         ];[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/Models/Book.php b/app/Models/Book.php[m
+[1mindex ea4a56a..0237e49 100644[m
+[1m--- a/app/Models/Book.php[m
+[1m+++ b/app/Models/Book.php[m
+[36m@@ -38,4 +38,4 @@[m [mpublic function favoritedByUsers()[m
+     {[m
+         return $this->belongsToMany(User::class, 'favorites');[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/Models/Genre.php b/app/Models/Genre.php[m
+[1mindex 95606be..5ed2655 100644[m
+[1m--- a/app/Models/Genre.php[m
+[1m+++ b/app/Models/Genre.php[m
+[36m@@ -17,4 +17,4 @@[m [mpublic function books()[m
+     {[m
+         return $this->belongsToMany(Book::class);[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/Models/Review.php b/app/Models/Review.php[m
+[1mindex 5a97f28..e7f747d 100644[m
+[1m--- a/app/Models/Review.php[m
+[1m+++ b/app/Models/Review.php[m
+[36m@@ -30,4 +30,4 @@[m [mpublic function likedByUsers()[m
+     {[m
+         return $this->belongsToMany(User::class, 'review_likes');[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/Models/User.php b/app/Models/User.php[m
+[1mindex 564b5a3..079c164 100644[m
+[1m--- a/app/Models/User.php[m
+[1m+++ b/app/Models/User.php[m
+[36m@@ -46,4 +46,4 @@[m [mpublic function likedReviews()[m
+     {[m
+         return $this->belongsToMany(Review::class, 'review_likes');[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/Policies/BookPolicy.php b/app/Policies/BookPolicy.php[m
+[1mindex 73f6be5..bcebbac 100644[m
+[1m--- a/app/Policies/BookPolicy.php[m
+[1m+++ b/app/Policies/BookPolicy.php[m
+[36m@@ -4,7 +4,6 @@[m
+ [m
+ use App\Models\Book;[m
+ use App\Models\User;[m
+[31m-use Illuminate\Auth\Access\Response;[m
+ [m
+ class BookPolicy[m
+ {[m
+[1mdiff --git a/app/Policies/ReviewPolicy.php b/app/Policies/ReviewPolicy.php[m
+[1mindex 7b226fc..fc3a3d1 100644[m
+[1m--- a/app/Policies/ReviewPolicy.php[m
+[1m+++ b/app/Policies/ReviewPolicy.php[m
+[36m@@ -4,7 +4,6 @@[m
+ [m
+ use App\Models\Review;[m
+ use App\Models\User;[m
+[31m-use Illuminate\Auth\Access\Response;[m
+ [m
+ class ReviewPolicy[m
+ {[m
+[1mdiff --git a/app/Providers/FortifyServiceProvider.php b/app/Providers/FortifyServiceProvider.php[m
+[1mindex 94d921a..b5337dc 100644[m
+[1m--- a/app/Providers/FortifyServiceProvider.php[m
+[1m+++ b/app/Providers/FortifyServiceProvider.php[m
+[36m@@ -37,10 +37,10 @@[m [mpublic function boot(): void[m
+ [m
+         RateLimiter::for('login', function (Request $request) {[m
+             $throttleKey = Str::transliterate([m
+[31m-                Str::lower($request->input(Fortify::username())) . '|' . $request->ip()[m
+[32m+[m[32m                Str::lower($request->input(Fortify::username())).'|'.$request->ip()[m
+             );[m
+ [m
+             return Limit::perMinute(5)->by($throttleKey);[m
+         });[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/bootstrap/app.php b/bootstrap/app.php[m
+[1mindex 037e17d..b4a5fc3 100644[m
+[1m--- a/bootstrap/app.php[m
+[1m+++ b/bootstrap/app.php[m
+[36m@@ -1,5 +1,10 @@[m
+ <?php[m
+ [m
+[32m+[m[32muse App\Exceptions\Handler;[m
+[32m+[m[32muse App\Http\Kernel;[m
+[32m+[m[32muse Illuminate\Contracts\Debug\ExceptionHandler;[m
+[32m+[m[32muse Illuminate\Foundation\Application;[m
+[32m+[m
+ /*[m
+ |--------------------------------------------------------------------------[m
+ | Create The Application[m
+[36m@@ -11,7 +16,7 @@[m
+ |[m
+ */[m
+ [m
+[31m-$app = new Illuminate\Foundation\Application([m
+[32m+[m[32m$app = new Application([m
+     $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)[m
+ );[m
+ [m
+[36m@@ -28,7 +33,7 @@[m
+ [m
+ $app->singleton([m
+     Illuminate\Contracts\Http\Kernel::class,[m
+[31m-    App\Http\Kernel::class[m
+[32m+[m[32m    Kernel::class[m
+ );[m
+ [m
+ $app->singleton([m
+[36m@@ -37,8 +42,8 @@[m
+ );[m
+ [m
+ $app->singleton([m
+[31m-    Illuminate\Contracts\Debug\ExceptionHandler::class,[m
+[31m-    App\Exceptions\Handler::class[m
+[32m+[m[32m    ExceptionHandler::class,[m
+[32m+[m[32m    Handler::class[m
+ );[m
+ [m
+ /*[m
+[1mdiff --git a/config/app.php b/config/app.php[m
+[1mindex 86cd9c5..f98b4dd 100644[m
+[1m--- a/config/app.php[m
+[1m+++ b/config/app.php[m
+[36m@@ -1,5 +1,10 @@[m
+ <?php[m
+ [m
+[32m+[m[32muse App\Providers\AppServiceProvider;[m
+[32m+[m[32muse App\Providers\AuthServiceProvider;[m
+[32m+[m[32muse App\Providers\EventServiceProvider;[m
+[32m+[m[32muse App\Providers\FortifyServiceProvider;[m
+[32m+[m[32muse App\Providers\RouteServiceProvider;[m
+ use Illuminate\Support\Facades\Facade;[m
+ use Illuminate\Support\ServiceProvider;[m
+ [m
+[36m@@ -163,12 +168,12 @@[m
+         /*[m
+          * Application Service Providers...[m
+          */[m
+[31m-        App\Providers\AppServiceProvider::class,[m
+[31m-        App\Providers\AuthServiceProvider::class,[m
+[32m+[m[32m        AppServiceProvider::class,[m
+[32m+[m[32m        AuthServiceProvider::class,[m
+         // App\Providers\BroadcastServiceProvider::class,[m
+[31m-        App\Providers\EventServiceProvider::class,[m
+[31m-        App\Providers\FortifyServiceProvider::class,[m
+[31m-        App\Providers\RouteServiceProvider::class,[m
+[32m+[m[32m        EventServiceProvider::class,[m
+[32m+[m[32m        FortifyServiceProvider::class,[m
+[32m+[m[32m        RouteServiceProvider::class,[m
+     ])->toArray(),[m
+ [m
+     /*[m
+[1mdiff --git a/config/auth.php b/config/auth.php[m
+[1mindex 9548c15..5888aea 100644[m
+[1m--- a/config/auth.php[m
+[1m+++ b/config/auth.php[m
+[36m@@ -1,5 +1,7 @@[m
+ <?php[m
+ [m
+[32m+[m[32muse App\Models\User;[m
+[32m+[m
+ return [[m
+ [m
+     /*[m
+[36m@@ -62,7 +64,7 @@[m
+     'providers' => [[m
+         'users' => [[m
+             'driver' => 'eloquent',[m
+[31m-            'model' => App\Models\User::class,[m
+[32m+[m[32m            'model' => User::class,[m
+         ],[m
+ [m
+         // 'users' => [[m
+[1mdiff --git a/config/fortify.php b/config/fortify.php[m
+[1mindex 4479197..462af89 100644[m
+[1m--- a/config/fortify.php[m
+[1m+++ b/config/fortify.php[m
+[36m@@ -152,7 +152,7 @@[m
+         // Features::twoFactorAuthentication([[m
+         //    'confirm' => true,[m
+         //    'confirmPassword' => true,[m
+[31m-            // 'window' => 0,[m
+[32m+[m[32m        // 'window' => 0,[m
+         // ]),[m
+     ],[m
+ [m
+[1mdiff --git a/config/sanctum.php b/config/sanctum.php[m
+[1mindex 35d75b3..1a3170a 100644[m
+[1m--- a/config/sanctum.php[m
+[1m+++ b/config/sanctum.php[m
+[36m@@ -1,5 +1,8 @@[m
+ <?php[m
+ [m
+[32m+[m[32muse App\Http\Middleware\EncryptCookies;[m
+[32m+[m[32muse App\Http\Middleware\VerifyCsrfToken;[m
+[32m+[m[32muse Laravel\Sanctum\Http\Middleware\AuthenticateSession;[m
+ use Laravel\Sanctum\Sanctum;[m
+ [m
+ return [[m
+[36m@@ -75,9 +78,9 @@[m
+     */[m
+ [m
+     'middleware' => [[m
+[31m-        'authenticate_session' => Laravel\Sanctum\Http\Middleware\AuthenticateSession::class,[m
+[31m-        'encrypt_cookies' => App\Http\Middleware\EncryptCookies::class,[m
+[31m-        'verify_csrf_token' => App\Http\Middleware\VerifyCsrfToken::class,[m
+[32m+[m[32m        'authenticate_session' => AuthenticateSession::class,[m
+[32m+[m[32m        'encrypt_cookies' => EncryptCookies::class,[m
+[32m+[m[32m        'verify_csrf_token' => VerifyCsrfToken::class,[m
+     ],[m
+ [m
+ ];[m
+[1mdiff --git a/database/factories/UserFactory.php b/database/factories/UserFactory.php[m
+[1mindex 584104c..c4ceb07 100644[m
+[1m--- a/database/factories/UserFactory.php[m
+[1m+++ b/database/factories/UserFactory.php[m
+[36m@@ -2,12 +2,13 @@[m
+ [m
+ namespace Database\Factories;[m
+ [m
+[32m+[m[32muse App\Models\User;[m
+ use Illuminate\Database\Eloquent\Factories\Factory;[m
+ use Illuminate\Support\Facades\Hash;[m
+ use Illuminate\Support\Str;[m
+ [m
+ /**[m
+[31m- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>[m
+[32m+[m[32m * @extends Factory<User>[m
+  */[m
+ class UserFactory extends Factory[m
+ {[m
+[1mdiff --git a/database/seeders/BookSeeder.php b/database/seeders/BookSeeder.php[m
+[1mindex 47727be..14a7a31 100644[m
+[1m--- a/database/seeders/BookSeeder.php[m
+[1m+++ b/database/seeders/BookSeeder.php[m
+[36m@@ -2,10 +2,10 @@[m
+ [m
+ namespace Database\Seeders;[m
+ [m
+[31m-use Illuminate\Database\Seeder;[m
+ use App\Models\Book;[m
+ use App\Models\Genre;[m
+ use App\Models\User;[m
+[32m+[m[32muse Illuminate\Database\Seeder;[m
+ [m
+ class BookSeeder extends Seeder[m
+ {[m
+[36m@@ -19,6 +19,7 @@[m [mpublic function run(): void[m
+                 'author' => '夏目漱石',[m
+                 'isbn' => '9784101010014',[m
+                 'published_date' => '1905-01-01',[m
+[32m+[m[32m                'description' => '猫の視点から人間社会を風刺的に描いた、夏目漱石の代表的な長編小説です。',[m
+                 'genres' => ['小説'],[m
+             ],[m
+             [[m
+[36m@@ -26,6 +27,7 @@[m [mpublic function run(): void[m
+                 'author' => 'D・カーネギー',[m
+                 'isbn' => '9784422100524',[m
+                 'published_date' => '1936-10-01',[m
+[32m+[m[32m                'description' => '人間関係を円滑にするための考え方や実践方法をまとめた、自己啓発・ビジネス分野の名著です。',[m
+                 'genres' => ['ビジネス', '自己啓発'],[m
+             ],[m
+             [[m
+[36m@@ -33,6 +35,7 @@[m [mpublic function run(): void[m
+                 'author' => 'Dustin Boswell',[m
+                 'isbn' => '9784873115658',[m
+                 'published_date' => '2012-06-23',[m
+[32m+[m[32m                'description' => '読みやすく保守しやすいコードを書くための考え方や具体的なテクニックを解説した技術書です。',[m
+                 'genres' => ['技術書'],[m
+             ],[m
+             [[m
+[36m@@ -40,6 +43,7 @@[m [mpublic function run(): void[m
+                 'author' => 'スティーブン・R・コヴィー',[m
+                 'isbn' => '9784863940246',[m
+                 'published_date' => '2013-08-30',[m
+[32m+[m[32m                'description' => '主体性や目標設定、人間関係の築き方など、人生と仕事に役立つ習慣を体系的にまとめた書籍です。',[m
+                 'genres' => ['ビジネス', '自己啓発'],[m
+             ],[m
+             [[m
+[36m@@ -47,6 +51,7 @@[m [mpublic function run(): void[m
+                 'author' => '夏目漱石',[m
+                 'isbn' => '9784101010021',[m
+                 'published_date' => '1906-04-01',[m
+[32m+[m[32m                'description' => '正義感の強い青年教師が地方の学校で出会う人間模様を、軽快な語り口で描いた小説です。',[m
+                 'genres' => ['小説'],[m
+             ],[m
+             [[m
+[36m@@ -54,6 +59,7 @@[m [mpublic function run(): void[m
+                 'author' => 'ユヴァル・ノア・ハラリ',[m
+                 'isbn' => '9784309226712',[m
+                 'published_date' => '2016-09-08',[m
+[32m+[m[32m                'description' => '人類の誕生から現代社会に至るまでの歴史を、認知革命や農業革命などの視点から読み解く書籍です。',[m
+                 'genres' => ['歴史', '科学'],[m
+             ],[m
+             [[m
+[36m@@ -61,6 +67,7 @@[m [mpublic function run(): void[m
+                 'author' => 'Robert C. Martin',[m
+                 'isbn' => '9784048930598',[m
+                 'published_date' => '2017-12-18',[m
+[32m+[m[32m                'description' => '保守性や可読性の高いコードを書くための原則や実践方法を、具体例を交えて解説した技術書です。',[m
+                 'genres' => ['技術書'],[m
+             ],[m
+             [[m
+[36m@@ -68,6 +75,7 @@[m [mpublic function run(): void[m
+                 'author' => '岸見一郎・古賀史健',[m
+                 'isbn' => '9784478025819',[m
+                 'published_date' => '2013-12-13',[m
+[32m+[m[32m                'description' => 'アドラー心理学をもとに、対人関係や自由な生き方について対話形式でわかりやすく解説した書籍です。',[m
+                 'genres' => ['自己啓発'],[m
+             ],[m
+             [[m
+[36m@@ -75,6 +83,7 @@[m [mpublic function run(): void[m
+                 'author' => '又吉直樹',[m
+                 'isbn' => '9784163902302',[m
+                 'published_date' => '2015-03-11',[m
+[32m+[m[32m                'description' => 'お笑い芸人として生きる若者たちの葛藤や才能、師弟関係を繊細に描いた現代小説です。',[m
+                 'genres' => ['小説'],[m
+             ],[m
+             [[m
+[36m@@ -82,6 +91,7 @@[m [mpublic function run(): void[m
+                 'author' => 'ハンス・ロスリング',[m
+                 'isbn' => '9784822289607',[m
+                 'published_date' => '2019-01-11',[m
+[32m+[m[32m                'description' => '思い込みや偏見にとらわれず、データをもとに世界を正しく見るための考え方を紹介した書籍です。',[m
+                 'genres' => ['ビジネス', '科学'],[m
+             ],[m
+             [[m
+[36m@@ -89,20 +99,21 @@[m [mpublic function run(): void[m
+                 'author' => 'マルク・レビンソン',[m
+                 'isbn' => '9784822251468',[m
+                 'published_date' => '2007-01-18',[m
+[32m+[m[32m                'description' => 'コンテナ輸送の普及が物流や経済、世界貿易に与えた影響を描いたノンフィクションです。',[m
+                 'genres' => ['ビジネス', '歴史'],[m
+             ],[m
+         ];[m
+ [m
+         foreach ($books as $index => $bookData) {[m
+[31m-            $book = Book::firstOrCreate([m
+[32m+[m[32m            $book = Book::updateOrCreate([m
+                 ['isbn' => $bookData['isbn']],[m
+                 [[m
+                     'user_id' => $user->id,[m
+                     'title' => $bookData['title'],[m
+                     'author' => $bookData['author'],[m
+                     'published_date' => $bookData['published_date'],[m
+[31m-                    'description' => $bookData['title'] . 'の説明文です。',[m
+[31m-                    'image_url' => 'https://placehold.co/200x300/e2e8f0/475569?text=' . ($index + 1),[m
+[32m+[m[32m                    'description' => $bookData['description'],[m
+[32m+[m[32m                    'image_url' => 'https://placehold.co/200x300/e2e8f0/475569?text='.($index + 1),[m
+                 ][m
+             );[m
+ [m
+[36m@@ -111,4 +122,4 @@[m [mpublic function run(): void[m
+             $book->genres()->sync($genreIds);[m
+         }[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/database/seeders/DatabaseSeeder.php b/database/seeders/DatabaseSeeder.php[m
+[1mindex b1f36c0..0c8e007 100644[m
+[1m--- a/database/seeders/DatabaseSeeder.php[m
+[1m+++ b/database/seeders/DatabaseSeeder.php[m
+[36m@@ -17,4 +17,4 @@[m [mpublic function run(): void[m
+             ReviewLikeSeeder::class,[m
+         ]);[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/database/seeders/FavoriteSeeder.php b/database/seeders/FavoriteSeeder.php[m
+[1mindex 05c16a2..71b9fea 100644[m
+[1m--- a/database/seeders/FavoriteSeeder.php[m
+[1m+++ b/database/seeders/FavoriteSeeder.php[m
+[36m@@ -2,9 +2,9 @@[m
+ [m
+ namespace Database\Seeders;[m
+ [m
+[31m-use Illuminate\Database\Seeder;[m
+ use App\Models\Book;[m
+ use App\Models\User;[m
+[32m+[m[32muse Illuminate\Database\Seeder;[m
+ use Illuminate\Support\Facades\DB;[m
+ [m
+ class FavoriteSeeder extends Seeder[m
+[36m@@ -29,4 +29,4 @@[m [mpublic function run(): void[m
+             ]);[m
+         }[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/database/seeders/GenreSeeder.php b/database/seeders/GenreSeeder.php[m
+[1mindex 8ab8919..2427aca 100644[m
+[1m--- a/database/seeders/GenreSeeder.php[m
+[1m+++ b/database/seeders/GenreSeeder.php[m
+[36m@@ -2,8 +2,8 @@[m
+ [m
+ namespace Database\Seeders;[m
+ [m
+[31m-use Illuminate\Database\Seeder;[m
+ use App\Models\Genre;[m
+[32m+[m[32muse Illuminate\Database\Seeder;[m
+ [m
+ class GenreSeeder extends Seeder[m
+ {[m
+[36m@@ -28,4 +28,4 @@[m [mpublic function run(): void[m
+             ]);[m
+         }[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/database/seeders/ReviewLikeSeeder.php b/database/seeders/ReviewLikeSeeder.php[m
+[1mindex b21251f..dc33192 100644[m
+[1m--- a/database/seeders/ReviewLikeSeeder.php[m
+[1m+++ b/database/seeders/ReviewLikeSeeder.php[m
+[36m@@ -2,9 +2,9 @@[m
+ [m
+ namespace Database\Seeders;[m
+ [m
+[31m-use Illuminate\Database\Seeder;[m
+ use App\Models\Review;[m
+ use App\Models\User;[m
+[32m+[m[32muse Illuminate\Database\Seeder;[m
+ use Illuminate\Support\Facades\DB;[m
+ [m
+ class ReviewLikeSeeder extends Seeder[m
+[36m@@ -33,4 +33,4 @@[m [mpublic function run(): void[m
+             DB::table('review_likes')->insert($like);[m
+         }[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/database/seeders/ReviewSeeder.php b/database/seeders/ReviewSeeder.php[m
+[1mindex 65227d5..15abbca 100644[m
+[1m--- a/database/seeders/ReviewSeeder.php[m
+[1m+++ b/database/seeders/ReviewSeeder.php[m
+[36m@@ -2,10 +2,10 @@[m
+ [m
+ namespace Database\Seeders;[m
+ [m
+[31m-use Illuminate\Database\Seeder;[m
+ use App\Models\Book;[m
+ use App\Models\Review;[m
+ use App\Models\User;[m
+[32m+[m[32muse Illuminate\Database\Seeder;[m
+ [m
+ class ReviewSeeder extends Seeder[m
+ {[m
+[36m@@ -79,4 +79,4 @@[m [mpublic function run(): void[m
+             ]);[m
+         }[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/database/seeders/UserSeeder.php b/database/seeders/UserSeeder.php[m
+[1mindex 7e4cc70..a2001ba 100644[m
+[1m--- a/database/seeders/UserSeeder.php[m
+[1m+++ b/database/seeders/UserSeeder.php[m
+[36m@@ -2,9 +2,9 @@[m
+ [m
+ namespace Database\Seeders;[m
+ [m
+[32m+[m[32muse App\Models\User;[m
+ use Illuminate\Database\Seeder;[m
+ use Illuminate\Support\Facades\Hash;[m
+[31m-use App\Models\User;[m
+ [m
+ class UserSeeder extends Seeder[m
+ {[m
+[36m@@ -48,4 +48,4 @@[m [mpublic function run(): void[m
+             );[m
+         }[m
+     }[m
+[31m-}[m
+\ No newline at end of file[m
+[32m+[m[32m}[m
+[1mdiff --git a/routes/api.php b/routes/api.php[m
+[1mindex 4b9af5f..cb565cb 100644[m
+[1m--- a/routes/api.php[m
+[1m+++ b/routes/api.php[m
+[36m@@ -10,4 +10,4 @@[m
+         'show' => 'api.books.show',[m
+         'update' => 'api.books.update',[m
+         'destroy' => 'api.books.destroy',[m
+[31m-    ]);[m
+\ No newline at end of file[m
+[32m+[m[32m    ]);[m
+[1mdiff --git a/routes/web.php b/routes/web.php[m
+[1mindex 2cdd57e..fe0b046 100644[m
+[1m--- a/routes/web.php[m
+[1m+++ b/routes/web.php[m
+[36m@@ -1,13 +1,13 @@[m
+ <?php[m
+ [m
+[31m-use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;[m
+[31m-use Laravel\Fortify\Http\Controllers\RegisteredUserController;[m
+ use App\Http\Controllers\BookController;[m
+[31m-use App\Http\Controllers\RankingController;[m
+ use App\Http\Controllers\FavoriteController;[m
+ use App\Http\Controllers\GenreController;[m
+[32m+[m[32muse App\Http\Controllers\RankingController;[m
+ use App\Http\Controllers\ReviewController;[m
+ use Illuminate\Support\Facades\Route;[m
+[32m+[m[32muse Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;[m
+[32m+[m[32muse Laravel\Fortify\Http\Controllers\RegisteredUserController;[m
+ [m
+ Route::middleware('guest')->group(function () {[m
+     Route::get('/login', function () {[m
+[36m@@ -48,4 +48,4 @@[m
+     Route::post('/reviews/{review}/like', [ReviewController::class, 'like'])->name('reviews.like');[m
+ });[m
+ [m
+[31m-Route::get('/books/{book}', [BookController::class, 'show'])->name('books.show');[m
+\ No newline at end of file[m
+[32m+[m[32mRoute::get('/books/{book}', [BookController::class, 'show'])->name('books.show');[m

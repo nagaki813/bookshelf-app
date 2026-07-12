@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Book;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\Book;
 
 class BookRequest extends FormRequest
 {
@@ -24,14 +24,15 @@ class BookRequest extends FormRequest
             'author' => ['required', 'string', 'max:255'],
             'isbn' => [
                 'required', 'string', 'digits:13', Rule::unique('books', 'isbn')->ignore($bookId, 'id'),
-                ],
+            ],
             'published_date' => ['required', 'date'],
-            'description' => ['nullable', 'url', 'max:2048'],
+            'description' => ['nullable', 'max:2048'],
             'image_url' => ['nullable', 'url', 'max:2048'],
             'genres' => ['required', 'array', 'min:1'],
             'genres.*' => ['exists:genres,id'],
         ];
     }
+
     public function messages(): array
     {
         return [

@@ -1,13 +1,13 @@
 <?php
 
-use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
-use Laravel\Fortify\Http\Controllers\RegisteredUserController;
 use App\Http\Controllers\BookController;
-use App\Http\Controllers\RankingController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\RankingController;
 use App\Http\Controllers\ReviewController;
 use Illuminate\Support\Facades\Route;
+use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
+use Laravel\Fortify\Http\Controllers\RegisteredUserController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', function () {

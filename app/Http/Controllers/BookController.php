@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\BookRequest;
 use App\Models\Book;
 use App\Models\Genre;
-use App\Http\Requests\BookRequest;
 
 class BookController extends Controller
 {
@@ -13,7 +13,7 @@ class BookController extends Controller
         $books = Book::with(['genres'])
             ->withAvg('reviews', 'rating')
             ->latest()
-            ->paginate(12);
+            ->paginate(10);
 
         return view('books.index', compact('books'));
     }

@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Genre;
 use App\Http\Requests\GenreRequest;
+use App\Models\Genre;
 
 class GenreController extends Controller
 {
