@@ -95,7 +95,7 @@ class BookController extends Controller
         $genreIds = $validated['genres'];
         unset($validated['genres']);
 
-        $book->updated($validated);
+        $book->update($validated);
 
         $book->genres()->sync($genreIds);
 

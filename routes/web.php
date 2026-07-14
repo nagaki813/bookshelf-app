@@ -5,6 +5,8 @@ use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\RankingController;
 use App\Http\Controllers\ReviewController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 use Laravel\Fortify\Http\Controllers\RegisteredUserController;
@@ -25,9 +27,14 @@ Route::middleware('guest')->group(function () {
         ->name('register.store');
 });
 
-Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
-    ->middleware('auth')
-    ->name('logout');
+Route::post('/logout', function (Request $request) {
+    Auth::guard('web')->logout();
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect()->route('books.index');
+})->middleware('auth')->name('logout');
 
 Route::get('/books', [BookController::class, 'index'])->name('books.index');
 Route::get('/ranking', [RankingController::class, 'index'])->name('ranking.index');
