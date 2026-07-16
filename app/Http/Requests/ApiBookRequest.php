@@ -29,16 +29,15 @@ class ApiBookRequest extends FormRequest
         $bookId = $book instanceof Book ? $book->id : $book;
 
         return [
-            'user_id' => ['required', 'integer', 'exists:users,id'],
             'title' => ['required', 'string', 'max:255'],
             'author' => ['required', 'string', 'max:255'],
             'isbn' => [
-                'required',
+                'nullable',
                 'string',
                 'digits:13',
                 Rule::unique('books', 'isbn')->ignore($bookId, 'id'),
             ],
-            'published_date' => ['required', 'date'],
+            'published_date' => ['nullable', 'date'],
             'description' => ['nullable', 'string'],
             'image_url' => ['nullable', 'url', 'max:2048'],
             'genres' => ['required', 'array', 'min:1'],
