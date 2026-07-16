@@ -20,7 +20,8 @@ class BookTest extends TestCase
         $response = $this->get('/books');
 
         $response->assertStatus(200);
-        $response->assertSee('吾輩は猫である');
+        $response->assertSee('書籍一覧');
+        $response->assertSee('人を動かす');
     }
 
     public function test_book_detail_can_be_displayed(): void
