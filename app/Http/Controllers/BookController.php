@@ -5,17 +5,43 @@ namespace App\Http\Controllers;
 use App\Http\Requests\BookRequest;
 use App\Models\Book;
 use App\Models\Genre;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class BookController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $books = Book::with(['genres'])
-            ->withAvg('reviews', 'rating')
-            ->latest()
-            ->paginate(10);
+        $genres = Genre::orderBy('name')->get();
 
-        return view('books.index', compact('books'));
+        $query = Book::with('genres')
+            ->withAvg('reviews', 'rating');
+
+        if ($request->filled('keyword')) {
+            $keyword = $request->input('keyword');
+
+            $query->where(function ($query) use ($keyword) {
+                $query->where('title', 'like', "%{$keyword}%")
+                    ->orWhere('author', 'like', "%{$keyword}%");
+            });
+        }
+
+        if ($request->filled('genre')) {
+            $query->whereHas('genres', function ($query) use ($request) {
+                $query->where('genres.id', $request->input('genre'));
+            });
+        }
+
+        match ($request->input('sort', 'newest')) {
+            'oldest' => $query->oldest(),
+            'rating' => $query->orderByDesc('reviews_avg_rating')->latest(),
+            'title' => $query->orderBy('title'),
+            default => $query->latest(),
+        };
+
+        $books = $query->paginate(10)->withQueryString();
+
+        return view('books.index', compact('books', 'genres'));
     }
 
     /**
@@ -116,5 +142,66 @@ class BookController extends Controller
         return redirect()
             ->route('books.index')
             ->with('success', '書籍を削除しました。');
+    }
+
+    public function fetchByIsbn(string $isbn)
+    {
+        if (! preg_match('/\A\d{13}\z/', $isbn)) {
+            return response()->json([
+                'error' => 'ISBNは13桁で指定してください。',
+            ], 422);
+        }
+
+        $response = Http::timeout(5)->get('https://www.googleapis.com/books/v1/volumes', [
+            'q' => "isbn:{$isbn}",
+            'maxResults' => 1,
+        ]);
+
+        if (! $response->successful()) {
+            return response()->json([
+                'error' => '書籍情報の取得に失敗しました。',
+            ], 502);
+        }
+
+        $items = $response->json('items', []);
+
+        if (empty($items)) {
+            return response()->json([
+                'error' => '該当する書籍が見つかりませんでした。',
+            ], 404);
+        }
+
+        $volumeInfo = $items[0]['volumeInfo'] ?? [];
+
+        return response()->json([
+            'title' => $volumeInfo['title'] ?? '',
+            'author' => implode('、', $volumeInfo['authors'] ?? []),
+            'published_date' => $this->normalizePublishedDate($volumeInfo['publishedDate'] ?? null),
+            'description' => $volumeInfo['description'] ?? '',
+            'image_url' => $volumeInfo['imageLinks']['thumbnail']
+                ?? $volumeInfo['imageLinks']['smallThumbnail']
+                ?? '',
+        ]);
+    }
+
+    private function normalizePublishedDate(?string $publishedDate): ?string
+    {
+        if ($publishedDate === null) {
+            return null;
+        }
+
+        if (preg_match('/\A\d{4}\z/', $publishedDate)) {
+            return "{$publishedDate}-01-01";
+        }
+
+        if (preg_match('/\A\d{4}-\d{2}\z/', $publishedDate)) {
+            return "{$publishedDate}-01";
+        }
+
+        if (preg_match('/\A\d{4}-\d{2}-\d{2}\z/', $publishedDate)) {
+            return $publishedDate;
+        }
+
+        return null;
     }
 }

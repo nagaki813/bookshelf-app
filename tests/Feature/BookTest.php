@@ -6,6 +6,7 @@ use App\Models\Book;
 use App\Models\Genre;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class BookTest extends TestCase
@@ -110,7 +111,6 @@ class BookTest extends TestCase
             'title',
             'author',
             'isbn',
-            'published_date',
             'image_url',
             'genres',
         ]);
@@ -215,5 +215,106 @@ class BookTest extends TestCase
         $this->assertDatabaseHas('books', [
             'id' => $book->id,
         ]);
+    }
+
+    public function test_authenticated_user_can_create_book_without_isbn_and_published_date(): void
+    {
+        $this->seed();
+
+        $user = User::first();
+        $genre = Genre::first();
+
+        $response = $this->actingAs($user)->post(route('books.store'), [
+            'title' => 'ISBNなしテスト書籍',
+            'author' => 'テスト著者',
+            'isbn' => '',
+            'published_date' => '',
+            'description' => 'ISBNと出版日なしで登録するテストです。',
+            'image_url' => '',
+            'genres' => [$genre->id],
+        ]);
+
+        $response->assertRedirect();
+
+        $this->assertDatabaseHas('books', [
+            'user_id' => $user->id,
+            'title' => 'ISBNなしテスト書籍',
+            'author' => 'テスト著者',
+            'isbn' => null,
+            'published_date' => null,
+        ]);
+    }
+
+    public function test_books_can_be_searched_by_keyword(): void
+    {
+        $this->seed();
+
+        $response = $this->get(route('books.index', [
+            'keyword' => 'リーダブル',
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('リーダブルコード');
+        $response->assertDontSee('吾輩は猫である');
+    }
+
+    public function test_books_can_be_filtered_by_genre(): void
+    {
+        $this->seed();
+
+        $genre = Genre::where('name', '技術書')->first();
+
+        $response = $this->get(route('books.index', [
+            'genre' => $genre->id,
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertSee('リーダブルコード');
+        $response->assertSee('Clean Code');
+        $response->assertDontSee('吾輩は猫である');
+    }
+
+    public function test_authenticated_user_can_fetch_book_information_by_isbn(): void
+    {
+        Http::fake([
+            'https://www.googleapis.com/books/v1/volumes*' => Http::response([
+                'items' => [
+                    [
+                        'volumeInfo' => [
+                            'title' => 'API取得テスト書籍',
+                            'authors' => ['テスト著者A', 'テスト著者B'],
+                            'publishedDate' => '2020',
+                            'description' => 'Google Books APIから取得した説明です。',
+                            'imageLinks' => [
+                                'thumbnail' => 'https://example.com/book.jpg',
+                            ],
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $this->seed();
+
+        $user = User::first();
+
+        $response = $this->actingAs($user)
+            ->getJson(route('books.fetch-by-isbn', '9784000000000'));
+
+        $response->assertStatus(200)
+            ->assertJson([
+                'title' => 'API取得テスト書籍',
+                'author' => 'テスト著者A、テスト著者B',
+                'published_date' => '2020-01-01',
+                'description' => 'Google Books APIから取得した説明です。',
+                'image_url' => 'https://example.com/book.jpg',
+            ]);
+    }
+
+    public function test_guest_cannot_fetch_book_information_by_isbn(): void
+    {
+        $response = $this->getJson(route('books.fetch-by-isbn', '9784000000000'));
+
+        $response->assertStatus(401);
     }
 }
