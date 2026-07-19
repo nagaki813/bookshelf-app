@@ -157,6 +157,12 @@ class BookController extends Controller
             'maxResults' => 1,
         ]);
 
+        if ($response->status() === 429) {
+            return response()->json([
+                'error' => 'Google Books APIの利用上限に達しているため、書籍情報を取得できませんでした。時間をおいて再度お試しください。',
+            ], 429);
+        }
+
         if (! $response->successful()) {
             return response()->json([
                 'error' => '書籍情報の取得に失敗しました。',
